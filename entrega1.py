@@ -17,7 +17,7 @@ def planear_escaneo(tuneles, robots):
         lista_tuneles.append((tunel, ["L"]))
 
         #De esta manera agrego dos robots en el mismo lugar
-        lista_tuneles[i_tunel][1].append("O")
+        #lista_tuneles[i_tunel][1].append("O")
 
 
     #Ahora le asignamos la batería restante y el camino que recorrio (para poder cargarlo) a los robots
@@ -25,6 +25,8 @@ def planear_escaneo(tuneles, robots):
     for i_robot, robot in enumerate(robots):
         if robot[1] == "escaneador":
             lista_robots.append((robot[0], 1000, []))
+        else:
+            lista_robots.append((robot[0],[]))
 
     class MinaProblem(SearchProblem):
         def is_goal(self, state):
@@ -70,26 +72,34 @@ def planear_escaneo(tuneles, robots):
             
             rob, desc_robot = robots
             #Acciones 
-            accion, posicion = action
-            posx,posy = posicion
+            accion, robOpos = action
             #Acción: "mover",posicion[]
             #Acción: "cargar",robot[]
             #Obtengo el nombre de la acción a realizar
-            desc_accion = accion
-
-            if desc_accion == "mover":
+            if accion == "mover":
                 ##Mover el robot.
+                if robOpos in(tuneles):
+                    #Eliminamos el tunel recorrido.
+                    tuneles.remove(robOpos)
+                for var in lista_tuneles:
+                    if robOpos == var[0]:
+                        #Agregamos el robot en la posicion correspondiente de la lista tuneles. 
+                        var[1] = rob
+                        #Recorremos la lista robots para agregar el camino que recorrio hasta el momento.
+                        for lrob in lista_robots:
+                            if rob == lrob[0]:
+                                lrob[2].append(robOpos)
                 
-                if desc_robot == "escaneador":
-                    #Deberiamos restar 1000 a la bateria
-                    pass
-                else:
-                    #Deberiamos restar 100 a la bateria
-                    pass 
+                for var in lista_robots:
+                        if var[0]==rob:
+                            if desc_robot == "escaneador":
+                                var[1]-=100                    
+                #El otro consumo lo mismo pero no modelamos su consumo ya que no tiene limites.
+
             elif accion == "cargar":
-                pass    
-
-
+                for var in lista_tuneles:
+                    if   in var[1]:
+                        
             return state
 
         def heuristic(self, state):
