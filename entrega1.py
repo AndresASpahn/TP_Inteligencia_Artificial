@@ -1,125 +1,152 @@
 from simpleai.search import SearchProblem
-from simpleai.search.traditional import breadth_first, depth_first, limited_depth_first, iterative_limited_depth_first, uniform_cost, greedy, astar
+from simpleai.search.traditional import astar
 from simpleai.search.viewers import WebViewer, ConsoleViewer, BaseViewer
-import itertools
 from simpleai.search.viewers import WebViewer, BaseViewer
 
 def planear_escaneo(tuneles, robots):
-    
-    #En esta lista va la estructura necesaria para las respuestas del TP
-    resultado = []
-
-    #Primero creamos lista con estados de los tuneles (L=Libre, "s1"=se encuentra un robot en el, E=Escaneado)
-    lista_tuneles = []
-
-    #Todos los tuneles quedan como libres
-    for i_tunel, tunel in enumerate(tuneles):
-        lista_tuneles.append((tunel, ["L"]))
-
-        #De esta manera agrego dos robots en el mismo lugar
-        #lista_tuneles[i_tunel][1].append("O")
-
-
-    #Ahora le asignamos la batería restante y el camino que recorrio (para poder cargarlo) a los robots
-    lista_robots = []
-    for i_robot, robot in enumerate(robots):
-        if robot[1] == "escaneador":
-            lista_robots.append((robot[0], 1000, []))
-        else:
-            lista_robots.append((robot[0],[]))
 
     class MinaProblem(SearchProblem):
+        
+#       ---------- IS_GOAL ----------
+
         def is_goal(self, state):
-            #Es True si todas las posiciones se recorrieron
-            #Se necesita tener el recorrido en algún lado
-            for i_tunel, tunel in enumerate(lista_tuneles):
-                if lista_tuneles[i_tunel][1] != "E":        
-                    return False
+            
+            tuneles, robots = state
+
+            c = 0
+
+            for tunel in tuneles:
+                if "E" in tunel[1]:
+                    c+=1
+            if c != len(tuneles):
+                return False
             return True
 
-        def actions(self, state):
-            lista_acciones = []
-            tuneles, robots = state
-            #Hay dos acciones posibles
-            #"mover"
-            movimientos_posibles = ((-1, 0), (1, 0), (0, -1), (0, 1))
-            for tunel in tuneles:
-                for mov in movimientos_posibles:
-                    posicion = []
-                    x=tunel[0]+mov[0]
-                    y=tunel[1]+mov[1]
-                    posicion.append((x,y))
-                    if posicion[0] in tuneles :
-                        for tunel in lista_tuneles:
-                            if tunel[0] == posicion[0] and tunel[1] == "L":
-                                lista_acciones.append(("mover", posicion[0]))
-            #"cargar"
-            for robot in lista_robots:
-                if robot[1] < 1000:
-                    lista_acciones.append(("cargar", robot[0]))
+#       ---------- ACTIONS ----------
 
-            return lista_acciones
+        def actions(self, state):
+            
+            tuneles, robots = state
+
+            lista_acciones = []
+
+            #Hay dos acciones posibles
+            #"cargar"
+            for robot in robots:
+                if robot[2] < 1000 and robot[1] == "escaneador": #Pregunta si hay un escaneador con poca bateria
+                    for robot2 in robots:
+                        if robot2[1] == "soporte" and robot[3] == robot2[3]:    #Busca un soporte que se encuentre en la misma posicion
+                            lista_acciones.append((robot2[0], "cargar", robot[0]))
+
+            #"mover"
+            for robot in robots:
+                if robot[3] == None:
+                    lista_acciones.append((robot[0], "mover", (5,1))) #En el primer movimiento todos los robots van a (5,1)
+                else:
+                    movimientos_posibles = ((-1, 0), (1, 0), (0, 1), (0, -1))
+                    for mov in movimientos_posibles:
+                        posicion = []
+                        x = robot[3][0] + mov[0]
+                        y = robot[3][1] + mov[1]
+                        posicion.append((x,y))
+                        for tunel in tuneles:
+                            if posicion == tunel[0]: 
+                                if robot[1] == "escaneador" and tunel[2] == "L":
+                                    lista_acciones.append((robot[0], "mover", tuple(posicion))) #Devuelve el robot, la accion y la posicion adonde se mueve
+                                elif robot[1] == "soporte": 
+                                    lista_acciones.append((robot[0], "mover", tuple(posicion))) #Los soportes se mueven por cualquier posicion
+
+            return tuple(lista_acciones)
+
+#       ---------- COST ----------
 
         def cost(self, state_ini, action, state_fin):
-            accion, posicion = action
+            robot, accion, donde = action
             if accion == "cargar":
                 return 5
             return 1 
         
+#       ---------- RESULT ----------
+
         def result(self, state, action):
-            #Estado (Tuneles + Robots)
+
             tuneles, robots = state
+
+            tuneles = list(tuneles)
+            robots = list(robots)
+
+            robot_hace, accion, donde = action
             
-            rob, desc_robot = robots
-            #Acciones 
-            accion, robOpos = action
-            #Acción: "mover",posicion[]
-            #Acción: "cargar",robot[]
-            #Obtengo el nombre de la acción a realizar
+            nuevo_state = []
+
             if accion == "mover":
-                ##Mover el robot.
-                if robOpos in(tuneles):
-                    #Eliminamos el tunel recorrido.
-                    tuneles.remove(robOpos)
-                for var in lista_tuneles:
-                    if robOpos == var[0]:
-                        #Agregamos el robot en la posicion correspondiente de la lista tuneles. 
-                        var[1] = rob
-                        #Recorremos la lista robots para agregar el camino que recorrio hasta el momento.
-                        for lrob in lista_robots:
-                            if rob == lrob[0]:
-                                lrob[2].append(robOpos)
-                
-                for var in lista_robots:
-                        if var[0]==rob:
-                            if desc_robot == "escaneador":
-                                var[1]-=100                    
-                #El otro consumo lo mismo pero no modelamos su consumo ya que no tiene limites.
-
+                for tunel in tuneles:
+                    if tunel[0] == donde:
+                        tunel[1] = "E"
+                for robot in robots:
+                    if robot_hace == robot[0]:
+                        robot[2] -= 100
+                        robot[3] == tuple(donde)
             elif accion == "cargar":
-                for var in lista_tuneles:
-                    if   in var[1]:
-                        
-            return state
+                for robot in robots:
+                    if robot[0] == donde:
+                        robot[2] = 1000
 
-        def heuristic(self, state):
-            costo_heuristic = 0
-            #La heuristica corresponde a los nodos que faltan recorrer. (tunel,"L") 
-            # multiplicado por el tiempo del robot que menos consume(1 minuto).
-            tuneles, robots = state
-            for tunel in tuneles:
-                if lista_tuneles[i_tunel][1] != "E":        
-                    costo_heuristic += 1    
-            return costo_heuristic
+            nuevo_state = (tuple(tuneles), tuple(robots))
 
-    INITIAL_STATE = (tuple(tuneles), tuple(robots))
+            return nuevo_state
+
+#       ---------- HEURISTICA ----------
+
+        # def heuristic(self, state):
+        #     costo_heuristic = 0
+        #     #La heuristica corresponde a los nodos que faltan recorrer. (tunel,"L") 
+        #     # multiplicado por el tiempo del robot que menos consume(1 minuto).
+        #     tuneles, robots = state
+        #     for tunel in tuneles:
+        #         if lista_tuneles[i_tunel][1] != "E":        
+        #             costo_heuristic += 1    
+        #     return costo_heuristic
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    #((tunel),("L")) lista_tuneles[1] puede contener una "E" en caso de ser escaneado
+    # La "L" significa que el tunel no fue escaneado en esta zona y esta libre
+    lista_tuneles = []
+    for tunel in tuneles:
+        lista_tuneles.append((tunel, ["L"]))
+
+    lista_robots = []
+    for robot in robots:
+        lista_robots.append((robot[0], robot[1], 1000, [])) #("e1", "escaneador", 1000, []) nombre, descripcion, bateria y posicion actual
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    resultado = []
+
+    lista_tuneles = tuple(lista_tuneles)
+    lista_robots = tuple(lista_robots)
+
+    INITIAL_STATE = (lista_tuneles, lista_robots)
     problema = MinaProblem(INITIAL_STATE)
+    
+    proceso = astar(problema, graph_search=True)
+
+    for action, state in proceso.path():
+        if (action is not None):
+            resultado.append(action)
 
     return resultado
 
-if __name__ == '__main__':
 
-    robots= [("s1", "soporte"), ("e1", "escaneador"), ("e3", "escaneador")]
-    tuneles= [(5, 1), (6 , 1), (6, 2)]
 
-    plan = planear_escaneo(tuneles, robots)
+# if __name__ == '__main__':
+
+#     robots= [("s1", "soporte"), ("e1", "escaneador"), ("e3", "escaneador")]
+#     tuneles= [(5, 1), (6 , 1), (6, 2)]
+
+#     plan = planear_escaneo(tuneles, robots)
+
+
+#De esta manera agrego dos robots en el mismo lugar
+#lista_tuneles[i_tunel][1].append("O")
