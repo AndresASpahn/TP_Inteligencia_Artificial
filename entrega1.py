@@ -11,12 +11,14 @@ def planear_escaneo(tuneles, robots):
 
     #Primero creamos lista con estados de los tuneles (L=Libre, "s1"=se encuentra un robot en el, E=Escaneado)
     lista_tuneles = []
+
     #Todos los tuneles quedan como libres
     for i_tunel, tunel in enumerate(tuneles):
         lista_tuneles.append((tunel, ["L"]))
 
         #De esta manera agrego dos robots en el mismo lugar
         #lista_tuneles[i_tunel][1].append("O")
+
 
     #Ahora le asignamos la batería restante y el camino que recorrio (para poder cargarlo) a los robots
     lista_robots = []
@@ -63,14 +65,23 @@ def planear_escaneo(tuneles, robots):
             return 1 
         
         def result(self, state, action):
-            
+            #Estado (Tuneles + Robots)
             tuneles, robots = state
+            #Acciones 
+            accion, posicion = action
 
             return state
 
         def heuristic(self, state):
-            return
-
+            costo_heuristic = 0
+            #La heuristica corresponde a los nodos que faltan recorrer. (tunel,"L") 
+            # multiplicado por el tiempo del robot que menos consume(1 minuto).
+            tuneles, robots = state
+            for tunel in tuneles:
+                if lista_tuneles[i_tunel][1] != "E":        
+                    costo_heuristic += 1    
+            return costo_heuristic
+            
     INITIAL_STATE = (tuple(tuneles), tuple(robots))
     problema = MinaProblem(INITIAL_STATE)
 
