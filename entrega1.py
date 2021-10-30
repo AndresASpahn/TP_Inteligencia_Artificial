@@ -11,14 +11,14 @@ def planear_escaneo(tuneles, robots):
 
         def is_goal(self, state):
             
-            tuneles, robots = state
+            ltuneles, robots = state
 
             c = 0
 
-            for tunel in tuneles:
-                if "E" in tunel[1]:
+            for estado in estado_listas:
+                if "E" in estado:
                     c+=1
-            if c != len(tuneles):
+            if c != len(ltuneles):
                 return False
             return True
 
@@ -40,23 +40,26 @@ def planear_escaneo(tuneles, robots):
 
             #"mover"
             for robot in robots:
-                if robot[3] == None:
+                if not robot[3]:
                     lista_acciones.append((robot[0], "mover", (5,1))) #En el primer movimiento todos los robots van a (5,1)
                 else:
                     movimientos_posibles = ((-1, 0), (1, 0), (0, 1), (0, -1))
                     for mov in movimientos_posibles:
                         posicion = []
-                        x = robot[3][0] + mov[0]
-                        y = robot[3][1] + mov[1]
+                        posicion_robot = robot[3]
+                        x = posicion_robot[0] + mov[0]
+                        y = posicion_robot[1] + mov[1]
                         posicion.append((x,y))
-                        for tunel in tuneles:
+                        for i_tunel, tunel in enumerate(tuneles):
                             if posicion == tunel[0]: 
-                                if robot[1] == "escaneador" and tunel[2] == "L":
-                                    lista_acciones.append((robot[0], "mover", tuple(posicion))) #Devuelve el robot, la accion y la posicion adonde se mueve
+                                if robot[1] == "escaneador" and estado_listas[i_tunel] == "L":
+                                    lista_acciones.append((robot[0], "mover", posicion)) #Devuelve el robot, la accion y la posicion adonde se mueve
                                 elif robot[1] == "soporte": 
-                                    lista_acciones.append((robot[0], "mover", tuple(posicion))) #Los soportes se mueven por cualquier posicion
+                                    lista_acciones.append((robot[0], "mover", posicion)) #Los soportes se mueven por cualquier posicion
 
-            return tuple(lista_acciones)
+            acciones = tuple(lista_acciones)
+
+            return acciones
 
 #       ---------- COST ----------
 
@@ -72,27 +75,42 @@ def planear_escaneo(tuneles, robots):
 
             tuneles, robots = state
 
-            tuneles = list(tuneles)
-            robots = list(robots)
+            ltuneles = list(tuneles)
+            lrobots = []
+            for robot in robots:
+                lrobots.append(list(robot))
+            #for lrobot in lrobots:
+            #    lrobot[3] = list(lrobot[3])
 
             robot_hace, accion, donde = action
             
             nuevo_state = []
 
-            if accion == "mover":
-                for tunel in tuneles:
-                    if tunel[0] == donde:
-                        tunel[1] = "E"
-                for robot in robots:
+            if accion == "mover":                                   #Si la acción es mover
+                for i_ltunel, ltunel in enumerate(ltuneles):             
+                    if ltunel == donde:          
+                        estado_listas[i_ltunel] = "E"
+                for robot in lrobots:
                     if robot_hace == robot[0]:
+                        robot[3] = list(robot[3])
                         robot[2] -= 100
-                        robot[3] == tuple(donde)
+                        robot[3] = donde
+                        #robot[3].clear()
+                        #robot[3].append(donde)
             elif accion == "cargar":
-                for robot in robots:
+                for robot in lrobots:
                     if robot[0] == donde:
                         robot[2] = 1000
 
-            nuevo_state = (tuple(tuneles), tuple(robots))
+            devolver_robots = []
+
+            for robot in lrobots:
+                devolver_robots.append(tuple(robot))
+
+            devolver_tuneles = tuple(ltuneles)
+            devolver_robots = tuple(devolver_robots)
+
+            nuevo_state = (devolver_tuneles, devolver_robots)
 
             return nuevo_state
 
@@ -112,41 +130,36 @@ def planear_escaneo(tuneles, robots):
 
     #((tunel),("L")) lista_tuneles[1] puede contener una "E" en caso de ser escaneado
     # La "L" significa que el tunel no fue escaneado en esta zona y esta libre
-    lista_tuneles = []
+    estado_listas = []
     for tunel in tuneles:
-        lista_tuneles.append((tunel, ["L"]))
+        estado_listas.append("L")
 
     lista_robots = []
     for robot in robots:
-        lista_robots.append((robot[0], robot[1], 1000, [])) #("e1", "escaneador", 1000, []) nombre, descripcion, bateria y posicion actual
+        lista_robots.append((robot[0], robot[1], 1000, tuple())) #("e1", "escaneador", 1000, []) nombre, descripcion, bateria y posicion actual
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     resultado = []
 
-    lista_tuneles = tuple(lista_tuneles)
+    lista_tuneles = tuple(tuneles)
     lista_robots = tuple(lista_robots)
 
     INITIAL_STATE = (lista_tuneles, lista_robots)
     problema = MinaProblem(INITIAL_STATE)
     
-    proceso = astar(problema, graph_search=True)
+    metodo = astar(problema, graph_search=True)
 
-    for action, state in proceso.path():
+    for action, state in metodo.path():
         if (action is not None):
             resultado.append(action)
 
     return resultado
 
+if __name__ == '__main__':
+    
+    robots= [("s1", "soporte"), ("e1", "escaneador"), ("e3", "escaneador")]
+    tuneles= [(5, 1), (6 , 1), (6, 2)]
 
-
-# if __name__ == '__main__':
-
-#     robots= [("s1", "soporte"), ("e1", "escaneador"), ("e3", "escaneador")]
-#     tuneles= [(5, 1), (6 , 1), (6, 2)]
-
-#     plan = planear_escaneo(tuneles, robots)
-
-
-#De esta manera agrego dos robots en el mismo lugar
-#lista_tuneles[i_tunel][1].append("O")
+    plan = planear_escaneo(tuneles, robots)
+    print(plan)
