@@ -33,10 +33,16 @@ domains[problem_variables[2]] =[
 domains[problem_variables[3]] =[
     (("videollamada"),(10),)]
 
-print (domains[problem_variables[0]]) 
-print (domains[problem_variables[1]])    
-print (domains[problem_variables[2]]) 
-print (domains[problem_variables[3]]) 
-constraints = []
+#print (domains[problem_variables[0]]) 
+#print (domains[problem_variables[1]])    
+#print (domains[problem_variables[2]]) 
+#print (domains[problem_variables[3]]) 
+
+
+constraints= []
+
+# Aca vamos a definir la función para la adaptación
 def rediseñar_robot():
- return "ok"
+    problem = CspProblem(problem_variables, domains, constraints)
+    pass
+
