@@ -237,8 +237,8 @@ MINA_GRANDE = (
     pytest.param(MINA_UN_CASILLERO, (E1, S1), 1, 3, id="1_casillero_1_explorador_1_soporte"),
     pytest.param(MINA_UN_CASILLERO, (E1, E2), 1, 3, id="1_casillero_2_exploradores"),
     # casos chicos donde un robot solo y sin recargas es suficiente
-    # pytest.param(MINA_TUNEL_RECTO, (E1, ), 6, 3, id="tunel_recto_1_explorador"),
-    # pytest.param(MINA_TUNEL_RECTO, (E1, S1), 6, 3, id="tunel_recto_1_explorador_1_soporte"),
+    pytest.param(MINA_TUNEL_RECTO, (E1, ), 6, 3, id="tunel_recto_1_explorador"),
+    pytest.param(MINA_TUNEL_RECTO, (E1, S1), 6, 3, id="tunel_recto_1_explorador_1_soporte"),
     # pytest.param(MINA_TUNEL_RECTO, (E1, E2), 6, 3, id="tunel_recto_2_exploradores"),
     # pytest.param(MINA_TUNEL_ANCHO, (E1, ), 8, 3, id="tunel_ancho_1_explorador"),
     # pytest.param(MINA_TUNEL_ANCHO, (E1, S1), 8, 3, id="tunel_ancho_1_explorador_1_soporte"),

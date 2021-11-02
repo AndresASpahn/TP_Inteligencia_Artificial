@@ -15,12 +15,9 @@ def planear_escaneo(tuneles, robots):
 
             c = 0
 
-            for estado in estado_listas:
-                if "E" in estado:
-                    c+=1
-            if c != len(ltuneles):
-                return False
-            return True
+            if estado_listas.count("E") == len(estado_listas):
+                return True
+            return False
 
 #       ---------- ACTIONS ----------
 
@@ -32,30 +29,33 @@ def planear_escaneo(tuneles, robots):
 
             #Hay dos acciones posibles
             #"cargar"
-            for robot in robots:
-                if robot[2] < 1000 and robot[1] == "escaneador": #Pregunta si hay un escaneador con poca bateria
-                    for robot2 in robots:
-                        if robot2[1] == "soporte" and robot[3] == robot2[3]:    #Busca un soporte que se encuentre en la misma posicion
-                            lista_acciones.append((robot2[0], "cargar", robot[0]))
+            if "soporte" in robots:
+                for robot in robots:
+                    if robot[2] < 1000 and robot[1] == "escaneador": #Pregunta si hay un escaneador con poca bateria
+                        for robot2 in robots:
+                            if robot2[1] == "soporte" and robot[3] == robot2[3]:    #Busca un soporte que se encuentre en la misma posicion
+                                lista_acciones.append((robot2[0], "cargar", robot[0]))
 
             #"mover"
             for robot in robots:
                 if not robot[3]:
-                    lista_acciones.append((robot[0], "mover", (5,1))) #En el primer movimiento todos los robots van a (5,1)
+                    posicion = []
+                    posicion.append((5,1))
+                    lista_acciones.append((robot[0], "mover", tuple(posicion))) #En el primer movimiento todos los robots van a (5,1)
                 else:
                     movimientos_posibles = ((-1, 0), (1, 0), (0, 1), (0, -1))
                     for mov in movimientos_posibles:
                         posicion = []
                         posicion_robot = robot[3]
-                        x = posicion_robot[0] + mov[0]
-                        y = posicion_robot[1] + mov[1]
+                        x = posicion_robot[0][0] + mov[0]
+                        y = posicion_robot[0][1] + mov[1]
                         posicion.append((x,y))
-                        for i_tunel, tunel in enumerate(tuneles):
-                            if posicion == tunel[0]: 
-                                if robot[1] == "escaneador" and estado_listas[i_tunel] == "L":
-                                    lista_acciones.append((robot[0], "mover", posicion)) #Devuelve el robot, la accion y la posicion adonde se mueve
-                                elif robot[1] == "soporte": 
-                                    lista_acciones.append((robot[0], "mover", posicion)) #Los soportes se mueven por cualquier posicion
+                        if posicion[0] in tuneles:                  #Si es un tunel que debería ser escaneado
+                            indice = tuneles.index(posicion[0])     #Saco el indice
+                            if robot[1] == "escaneador" and estado_listas[indice] == "L":
+                                lista_acciones.append((robot[0], "mover", tuple(posicion))) #Devuelve el robot, la accion y la posicion adonde se mueve
+                            elif robot[1] == "soporte": 
+                                lista_acciones.append((robot[0], "mover", tuple(posicion))) #Los soportes se mueven por cualquier posicion
 
             acciones = tuple(lista_acciones)
 
@@ -75,7 +75,6 @@ def planear_escaneo(tuneles, robots):
 
             tuneles, robots = state
 
-            ltuneles = list(tuneles)
             lrobots = []
             for robot in robots:
                 lrobots.append(list(robot))
@@ -87,9 +86,9 @@ def planear_escaneo(tuneles, robots):
             nuevo_state = []
 
             if accion == "mover":                                   #Si la acción es mover
-                for i_ltunel, ltunel in enumerate(ltuneles):             
-                    if ltunel == donde:          
-                        estado_listas[i_ltunel] = "E"
+                if donde[0] in tuneles:                                #Si es un tunel que debería ser escaneado
+                    indice = tuneles.index(donde[0])         
+                    estado_listas[indice] = "E"
                 for robot in lrobots:
                     if robot_hace == robot[0]:
                         robot[3] = list(robot[3])
@@ -107,10 +106,9 @@ def planear_escaneo(tuneles, robots):
             for robot in lrobots:
                 devolver_robots.append(tuple(robot))
 
-            devolver_tuneles = tuple(ltuneles)
             devolver_robots = tuple(devolver_robots)
 
-            nuevo_state = (devolver_tuneles, devolver_robots)
+            nuevo_state = (tuneles, devolver_robots)
 
             return nuevo_state
 
@@ -156,10 +154,19 @@ def planear_escaneo(tuneles, robots):
 
     return resultado
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     
-    robots= [("s1", "soporte"), ("e1", "escaneador"), ("e3", "escaneador")]
-    tuneles= [(5, 1), (6 , 1), (6, 2)]
+#     E1 = ("e1", "escaneador")
+#     E2 = ("e2", "escaneador")
+#     E3 = ("e3", "escaneador")
+#     S1 = ("s1", "soporte")
+#     S2 = ("s2", "soporte")
 
-    plan = planear_escaneo(tuneles, robots)
-    print(plan)
+#     robots= [E1]
+#     tuneles= [(5, 1), (6 , 1), (6, 2)]
+
+#     MINA_UN_CASILLERO = ((5, 1), )
+#     MINA_TUNEL_RECTO = ((5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6),)
+
+#     plan = planear_escaneo(MINA_TUNEL_RECTO, robots)
+#     print(plan)
