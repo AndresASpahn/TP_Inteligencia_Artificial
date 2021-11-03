@@ -259,9 +259,9 @@ MINA_GRANDE = (
     pytest.param(MINA_OCHO, (E1, E2), 20, 20, id="mina_8_2_exploradores"),
     pytest.param(MINA_CRUZ, (E1, S1), 17, 50, id="mina_cruz_1_explorador_1_soporte"),
     # casos pesados
-    # pytest.param(MINA_TUNEL_ANCHO_LARGO, (E1, S1), 15, 120, id="mina_tunel_ancho_largo_largo_1_explorador_1_soporte"),  # sorprendentemente pesado!
-    # pytest.param(MINA_OCHO, (E1, S1), 23, 200, id="mina_8_1_explorador_1_soporte"),
-    # pytest.param(MINA_E, (E1, S1), 21, 500, id="mina_E_1_explorador_1_soporte"),
+    pytest.param(MINA_TUNEL_ANCHO_LARGO, (E1, S1), 15, 120, id="mina_tunel_ancho_largo_largo_1_explorador_1_soporte"),  # sorprendentemente pesado!
+    pytest.param(MINA_OCHO, (E1, S1), 23, 200, id="mina_8_1_explorador_1_soporte"),
+    pytest.param(MINA_E, (E1, S1), 21, 500, id="mina_E_1_explorador_1_soporte"),
     # casos *extremadamente* pesados, deshabilitados porque probablemente no puedan resolverlos
     # pytest.param(MINA_MEDIANA, (E1, S1), 1000, 1, id="mina_mediana_1_explorador_1_soporte"),
     # pytest.param(MINA_MEDIANA, (E1, E2, S1), 1000, 1, id="mina_mediana_2_exploradores_1_soporte"),
