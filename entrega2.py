@@ -70,7 +70,8 @@ def es_compatible_videollamada(variables,values):
     if comunic:
         return terre
     else:
-        True
+        return True
+        
 #Caja de suministros humanitarios en la parte trasera. 
 #El peso extra incrementa el consumo de cada movimiento en 10 mAh extras, 
 #y por su ubicación no es compatible con el par extra de patas, que se ubican en la misma región del chasis.
@@ -80,7 +81,7 @@ def es_compatible_patas_suminostrostras(variables,values):
     has_patas = 'patas_extras' in terreneros[0]
     has_chasis = 'caja_trasera' in cargas[0]
     if has_chasis:
-        return not has_patas
+        return  not (has_patas)
     return True
 
 
@@ -109,8 +110,8 @@ def es_autonomo(variables,values):
 
 constraints.append((('terreno_irregulares','cargas_extras'),es_compatible_patas_suminostrostras)) 
 constraints.append((('incrementar_autonomia','terreno_irregulares'),es_adm_uruga))   
-constraints.append((('terreno_irregulares', 'comunicacion_robot'), es_compatible_motor_radio))
-#constraints.append((('terreno_irregulares', 'comunicacion_robot'), es_compatible_videollamada))
+constraints.append((('terreno_irregulares', 'comunicacion_robot'),es_compatible_motor_radio))
+constraints.append((('terreno_irregulares', 'comunicacion_robot'),es_compatible_videollamada))
 constraints.append(((variables_problem),es_autonomo))
 
 #Función rediseñar.
