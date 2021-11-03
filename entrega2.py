@@ -14,9 +14,9 @@ baterias_base = 1000
 domains = {
     'incrementar_autonomia':
     [
-        ('baterias_chicas',10,5000),
-        ('baterias_medianas',20,7500),
-        ('baterias_grandes',50,10000),
+        ('baterias_chicas',10,4000),
+        ('baterias_medianas',20,6500),
+        ('baterias_grandes',50,9000),
     ]
     ,'terreno_irregulares':
     [
@@ -27,7 +27,7 @@ domains = {
     ,'cargas_extras':
     [
         ('caja_superior',10),
-        ('caja_trasera',10)
+        ('caja_trasera',15)
     ]
     ,'comunicacion_robot':
     [
@@ -85,28 +85,32 @@ def es_compatible_patas_suminostrostras(variables,values):
 
 
 
-constraints.append((('terreno_irregulares','cargas_extras'),es_compatible_patas_suminostrostras)) 
+
 
 #Controlar la autonomia
 def es_autonomo(variables,values):
     var= values[0]
     consumos_extras = 0
     bateria = var[2]
+    
     for x in values:
         consumos_extras += x[1]
+  
         print("ConsumoActual:",+consumos_extras)
     print("Consumo actual caso:",+consumos_extras)
     print("Bateria",+bateria)
     consumo_t = 100 + consumos_extras 
     bateria_resultante = 1000 + bateria
 
-    autonomia = ((bateria_resultante/consumo_t)>= 50)
+    autonomia = ((bateria_resultante/consumo_t) >= 50)
     print("Autonomía actual",+(bateria_resultante/consumo_t))
     return(autonomia)
 
+
+constraints.append((('terreno_irregulares','cargas_extras'),es_compatible_patas_suminostrostras)) 
 constraints.append((('incrementar_autonomia','terreno_irregulares'),es_adm_uruga))   
 constraints.append((('terreno_irregulares', 'comunicacion_robot'), es_compatible_motor_radio))
-constraints.append((('terreno_irregulares', 'comunicacion_robot'), es_compatible_videollamada))
+#constraints.append((('terreno_irregulares', 'comunicacion_robot'), es_compatible_videollamada))
 constraints.append(((variables_problem),es_autonomo))
 
 #Función rediseñar.
